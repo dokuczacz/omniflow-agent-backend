@@ -156,7 +156,9 @@ def get_assistant_response(thread_id: str) -> str:
             # Extract text from content blocks
             for content in msg.content:
                 if hasattr(content, "text"):
-                    return content.text
+                    return content.text.value
+    
+    return "No response from assistant."
     
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
