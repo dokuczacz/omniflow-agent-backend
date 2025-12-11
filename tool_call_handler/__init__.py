@@ -21,8 +21,8 @@ client = OpenAI(api_key=OPENAI_API_KEY)
 
 # === PHASE 2: CHAT WITH TOOL SUPPORT ===
 
-def execute_tool_call(tool_name: str, tool_arguments: dict) -> str:
-    """Execute a tool via proxy_router"""
+def execute_tool_call(tool_name: str, tool_arguments: dict) -> tuple[str, dict]:
+    """Execute a tool via proxy_router. Returns (result_string, tool_call_info)"""
     import requests
     
     try:
@@ -38,10 +38,73 @@ def execute_tool_call(tool_name: str, tool_arguments: dict) -> str:
         result = response.json()
         logging.info(f"Tool result: {result}")
         
-        return json.dumps(result)
+        tool_call_info = {
+            "tool_name": tool_name,
+            "arguments": tool_arguments,
+            "result": result,
+            "status": "success"
+        }
+        
+        return json.dumps(result), tool_call_info
     except Exception as e:
         logging.error(f"Tool execution failed: {e}")
-        return json.dumps({"error": str(e)})
+        tool_call_info = {
+            "tool_name": tool_name,
+            "arguments": tool_arguments,
+            "error": str(e),
+            "status": "failed"
+        }
+        return json.dumps({"error": str(e)}), tool_call_info
+
+
+def save_interaction_log(user_id: str, user_message: str, assistant_response: str, 
+                         thread_id: str = None, tool_calls_info: list = None) -> None:
+    """Save interaction data for future analysis"""
+    import requests
+    
+    if tool_calls_info is None:
+        tool_calls_info = []
+    
+    try:
+        # Get the save_interaction endpoint
+        function_url_base = os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net")
+        save_interaction_url = f"{function_url_base}/api/save_interaction"
+        save_interaction_code = os.getenv("FUNCTION_CODE_SAVE_INTERACTION", "")
+        
+        payload = {
+            "user_message": user_message,
+            "assistant_response": assistant_response,
+            "thread_id": thread_id,
+            "tool_calls": tool_calls_info,
+            "metadata": {
+                "assistant_id": ASSISTANT_ID,
+                "source": "tool_call_handler"
+            }
+        }
+        
+        # Add user_id to headers for proper isolation
+        headers = {
+            "X-User-Id": user_id,
+            "Content-Type": "application/json"
+        }
+        
+        # Log without exposing full user_id
+        user_id_masked = user_id[:4] + "***" if len(user_id) > 4 else "***"
+        logging.info(f"Saving interaction log for user: {user_id_masked}")
+        response = requests.post(
+            f"{save_interaction_url}?code={save_interaction_code}",
+            json=payload,
+            headers=headers,
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            logging.info(f"Interaction log saved successfully: {response.json()}")
+        else:
+            logging.warning(f"Failed to save interaction log: {response.status_code} - {response.text}")
+    except Exception as e:
+        logging.error(f"Error saving interaction log: {e}")
+        # Don't fail the main request if logging fails
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     """
@@ -74,6 +137,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         )
     
     try:
+        # Track tool calls for logging
+        all_tool_calls_info = []
+        
         # Step 1: Create or reuse thread
         if not thread_id:
             logging.info(f"Creating new thread for user: {user_id}")
@@ -142,8 +208,9 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                     
                     logging.info(f"Tool call: {function_name}({arguments})")
                     
-                    # Execute tool via proxy
-                    tool_result = execute_tool_call(function_name, arguments)
+                    # Execute tool via proxy and track the call
+                    tool_result, tool_call_info = execute_tool_call(function_name, arguments)
+                    all_tool_calls_info.append(tool_call_info)
                     
                     outputs.append({
                         "tool_call_id": call.id,
@@ -182,12 +249,22 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         
         logging.info(f"Assistant response: {assistant_response}")
         
-        # Step 6: Return response
+        # Step 6: Save interaction log for analysis
+        save_interaction_log(
+            user_id=user_id,
+            user_message=user_message,
+            assistant_response=assistant_response,
+            thread_id=thread_id,
+            tool_calls_info=all_tool_calls_info
+        )
+        
+        # Step 7: Return response
         response_data = {
             "status": "success",
             "response": assistant_response,
             "thread_id": thread_id,
-            "user_id": user_id
+            "user_id": user_id,
+            "tool_calls_count": len(all_tool_calls_info)
         }
         
         return func.HttpResponse(
