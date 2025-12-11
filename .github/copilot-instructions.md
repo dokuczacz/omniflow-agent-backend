@@ -4,12 +4,19 @@
 
 This is the **OmniFlow Agent Backend** - a production-ready Azure Functions backend built with Python 3.12 that provides multi-user data isolation capabilities. The backend enables multiple users, GPT instances, or clients to share a single backend infrastructure while maintaining complete data separation through automatic namespacing.
 
+### Related Repositories
+- **Frontend Client**: [dokuczacz/chatbot](https://github.com/dokuczacz/chatbot) - Streamlit web application that integrates with this backend
+  - Demonstrates proper usage of the backend API endpoints
+  - Shows how to pass user context via `X-User-Id` header
+  - Example of multi-user frontend implementation
+
 ### Key Features
 - Multi-user data isolation using Azure Blob Storage namespacing
 - RESTful API endpoints for data management
 - User ID extraction from headers, query parameters, or request body
 - Automatic namespace injection for secure data separation
 - Singleton pattern for efficient Azure client management
+- Integration with frontend clients (e.g., Streamlit chatbot)
 
 ## Technology Stack
 
@@ -266,12 +273,53 @@ Configure these in `local.settings.json` (local) or Azure Functions Application 
 
 These are singleton modules - modifications affect all functions.
 
+## Client Integration Patterns
+
+### Frontend Integration (Streamlit Example)
+
+The [chatbot repository](https://github.com/dokuczacz/chatbot) demonstrates proper backend integration:
+
+**Key Integration Points:**
+```python
+# 1. Always include X-User-Id header
+headers = {
+    "X-User-Id": user_id,
+    "Content-Type": "application/json"
+}
+
+# 2. Call backend endpoints with user context
+url = f"{BACKEND_URL}/{endpoint}?code={FUNCTION_KEY}"
+response = requests.post(url, json=payload, headers=headers, timeout=30)
+
+# 3. Common endpoints used by clients:
+# - tool_call_handler: Main assistant interaction
+# - list_blobs: List user's files
+# - read_blob_file: Read file content
+# - add_new_data: Add entries to files
+```
+
+**Client Requirements:**
+- Must pass `X-User-Id` header (or user_id in query/body)
+- Must handle Azure Function Key authentication (`?code={key}`)
+- Should implement proper error handling for network requests
+- Should respect user namespace isolation
+
+### API Client Guidelines
+
+When implementing new endpoints that will be used by clients:
+1. Ensure consistent response format across all endpoints
+2. Always include `user_id` in successful responses
+3. Return clear error messages (without exposing internals)
+4. Support both GET (query params) and POST (body) for flexibility
+5. Document expected parameters in function docstrings
+
 ## Documentation Requirements
 
 - **Code Changes**: Update relevant .md files if changing architecture or patterns
 - **API Changes**: Document new parameters or response formats in function docstrings
 - **Architecture Changes**: Update ARCHITECTURE.md and USER_MANAGEMENT.md
 - **New Features**: Add examples to documentation files
+- **Client Impact**: Consider impact on frontend clients (e.g., chatbot) when making API changes
 
 ## Domain-Specific Knowledge
 
@@ -328,10 +376,17 @@ The `tool_call_handler` function logs all assistant interactions to `users/{user
 
 ## Additional Resources
 
+### Documentation Files (This Repository)
 - **00_START_HERE.md**: Complete overview of the multi-user implementation
 - **USER_MANAGEMENT.md**: Detailed user isolation documentation
 - **ARCHITECTURE.md**: System architecture diagrams and data flow
 - **QUICKSTART_MULTIUSER.md**: Quick start guide for multi-user features
+
+### Related Repositories
+- **[dokuczacz/chatbot](https://github.com/dokuczacz/chatbot)**: Reference Streamlit frontend implementation
+  - Demonstrates proper API integration patterns
+  - Shows how to implement user context passing
+  - Example of multi-user client application
 
 ## Notes for Copilot Agent
 
