@@ -1,53 +1,56 @@
 import logging
 import azure.functions as func
 import requests
+import os
 
 # Pełne mapowanie akcji do endpointów
+# Function codes should be retrieved from environment variables or Azure Key Vault
+# See README for deployment instructions
 ACTION_MAP = {
     "get_current_time": {
         "method": "GET",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/get_current_time",
-        "code": "3YZLIdIa31Cpjmfy658npf5zjvverr9LDf33xRRV-pZwAzFu01IeHA=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/get_current_time",
+        "code": os.getenv("FUNCTION_CODE_GET_TIME", "")
     },
     "add_new_data": {
         "method": "POST",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/add_new_data",
-        "code": "9sNbFWhDYoYlc3F5anxyr5aPEp_YHRKhlyOqvBAI1fd9AzFu0PYBmw=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/add_new_data",
+        "code": os.getenv("FUNCTION_CODE_ADD_DATA", "")
     },
     "get_filtered_data": {
         "method": "POST",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/get_filtered_data",
-        "code": "WJXxPhTUVl5VKucG4yDmcYk8a8Yx8J6A__EgD2d28AXPAzFuXjSo1Q=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/get_filtered_data",
+        "code": os.getenv("FUNCTION_CODE_GET_DATA", "")
     },
     "manage_files": {
         "method": "POST",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/manage_files",
-        "code": "kIvzmKpf6YrSHDV7cfupRki22AD1VZKxMbx6ac1VGFl0AzFu_uyl3A=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/manage_files",
+        "code": os.getenv("FUNCTION_CODE_MANAGE_FILES", "")
     },
     "update_data_entry": {
         "method": "POST",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/update_data_entry",
-        "code": "YMHxj_ec7Si2RFtBGnFQisfvxVVdxU9llvCOJ35R4FWaAzFu6s10LQ=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/update_data_entry",
+        "code": os.getenv("FUNCTION_CODE_UPDATE_DATA", "")
     },
     "remove_data_entry": {
         "method": "POST",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/remove_data_entry",
-        "code": "1VTD_tAtmSSyioE-MEgS27GjClZYBcx8L5WWpS6cSKkuAzFuOHrlew=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/remove_data_entry",
+        "code": os.getenv("FUNCTION_CODE_REMOVE_DATA", "")
     },
     "upload_data_or_file": {
         "method": "POST",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/upload_data_or_file",
-        "code": "meLNxvlt2GKcHAL7030oGZkAu4LqoaYZ9pkRUIWWbP1bAzFuCOskXQ=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/upload_data_or_file",
+        "code": os.getenv("FUNCTION_CODE_UPLOAD", "")
     },
     "list_blobs": {
         "method": "GET",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/list_blobs",
-        "code": "6Y8LeWpCx0gvEx36xOd7SD2uhgO0itPzwSUEUBERN_GRAzFuj16kMQ=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/list_blobs",
+        "code": os.getenv("FUNCTION_CODE_LIST_BLOBS", "")
     },
     "read_blob_file": {
         "method": "GET",
-        "url": "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api/read_blob_file",
-        "code": "F2X-DkQpiMFd3KQEqokei8phObtMVEDR7EvvDniY5bqKAzFuG9OSqQ=="
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/read_blob_file",
+        "code": os.getenv("FUNCTION_CODE_READ_BLOB", "")
     }
 }
 
