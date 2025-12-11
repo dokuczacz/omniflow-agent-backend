@@ -7,3 +7,4 @@ azure-storage-blob
 requests
 openai>=1.20.0
 pydantic==1.10.13
+streamlit
