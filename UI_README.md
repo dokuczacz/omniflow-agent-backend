@@ -64,7 +64,10 @@ pip install -r requirements.txt
 ### Environment Variables
 ```bash
 export AZURE_FUNCTION_KEY="your_function_key_here"
+export REQUEST_TIMEOUT="30"  # Optional: request timeout in seconds (default: 30)
 ```
+
+**Note**: The UI will display a warning if `AZURE_FUNCTION_KEY` is not set.
 
 ### Run
 ```bash
@@ -144,9 +147,16 @@ omniflow-agent-backend/
 The UI is configured to connect to:
 - **Backend URL**: `https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api`
 - **Endpoint**: `tool_call_handler`
-- **Authentication**: Function Key (from environment variable)
+- **Authentication**: Function Key via `x-functions-key` header (secure)
+- **Timeout**: Configurable via `REQUEST_TIMEOUT` environment variable (default: 30s)
 
 To use a different backend, modify the `BACKEND_URL` constant in `streamlit_simple.py`.
+
+### Security Features
+
+- ✅ Function key passed via header (not URL) to prevent exposure in logs
+- ✅ Warning displayed when authentication key is missing
+- ✅ Configurable request timeout to prevent hanging requests
 
 ## Troubleshooting
 

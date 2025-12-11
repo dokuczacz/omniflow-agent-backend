@@ -8,8 +8,9 @@ import os
 # === CONFIGURATION ===
 BACKEND_URL = "https://agentbackendservice-dfcpcudzeah4b6ae.northeurope-01.azurewebsites.net/api"
 FUNCTION_KEY = os.environ.get("AZURE_FUNCTION_KEY", "")
+REQUEST_TIMEOUT = int(os.environ.get("REQUEST_TIMEOUT", "30"))  # Configurable timeout in seconds
 
-# Set page config
+# Set page config (must be first Streamlit command)
 st.set_page_config(
     page_title="OmniFlow Assistant - Simple",
     page_icon="🚀",
@@ -63,15 +64,16 @@ def call_backend(endpoint: str, payload: dict) -> dict:
     """Call Azure backend with timing and error tracking"""
     headers = {
         "X-User-Id": user_id,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "x-functions-key": FUNCTION_KEY  # Use header for authentication
     }
     
     start_time = time.time()
     add_debug_log(f"Calling {endpoint}...", "INFO")
     
     try:
-        url = f"{BACKEND_URL}/{endpoint}?code={FUNCTION_KEY}"
-        response = requests.post(url, json=payload, headers=headers, timeout=30)
+        url = f"{BACKEND_URL}/{endpoint}"
+        response = requests.post(url, json=payload, headers=headers, timeout=REQUEST_TIMEOUT)
         elapsed_time = time.time() - start_time
         
         # Track response time
@@ -119,6 +121,10 @@ def send_to_llm(message_content: str) -> str:
 
 # === DEBUGGING PANEL ===
 st.title("🚀 OmniFlow Assistant")
+
+# Warn if function key is not set
+if not FUNCTION_KEY:
+    st.warning("⚠️ AZURE_FUNCTION_KEY environment variable is not set. Backend calls may fail.")
 
 # Debugging toolbar at the top
 debug_col1, debug_col2, debug_col3, debug_col4 = st.columns([2, 2, 2, 4])
@@ -192,17 +198,15 @@ prompt = st.chat_input("Type your message here...")
 if prompt:
     # Add user message
     st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.write(prompt)
     
     # Get LLM response
-    with st.chat_message("assistant"):
-        with st.spinner("🤔 Thinking..."):
-            response = send_to_llm(prompt)
-        st.write(response)
+    with st.spinner("🤔 Thinking..."):
+        response = send_to_llm(prompt)
     
     # Store assistant response
     st.session_state.messages.append({"role": "assistant", "content": response})
+    
+    # Rerun to update UI with new messages
     st.rerun()
 
 # === FOOTER ===
