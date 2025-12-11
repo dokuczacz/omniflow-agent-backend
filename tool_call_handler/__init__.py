@@ -58,9 +58,12 @@ def execute_tool_call(tool_name: str, tool_arguments: dict) -> tuple[str, dict]:
 
 
 def save_interaction_log(user_id: str, user_message: str, assistant_response: str, 
-                         thread_id: str, tool_calls_info: list) -> None:
+                         thread_id: str = None, tool_calls_info: list = None) -> None:
     """Save interaction data for future analysis"""
     import requests
+    
+    if tool_calls_info is None:
+        tool_calls_info = []
     
     try:
         # Get the save_interaction endpoint
@@ -85,7 +88,9 @@ def save_interaction_log(user_id: str, user_message: str, assistant_response: st
             "Content-Type": "application/json"
         }
         
-        logging.info(f"Saving interaction log for user: {user_id}")
+        # Log without exposing full user_id
+        user_id_masked = user_id[:4] + "***" if len(user_id) > 4 else "***"
+        logging.info(f"Saving interaction log for user: {user_id_masked}")
         response = requests.post(
             f"{save_interaction_url}?code={save_interaction_code}",
             json=payload,

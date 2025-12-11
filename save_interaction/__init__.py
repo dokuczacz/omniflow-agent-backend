@@ -80,9 +80,10 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             logs = []
         
         # 3. Create new interaction entry
+        now = datetime.utcnow()
         interaction_entry = {
-            "interaction_id": f"INT_{datetime.utcnow().strftime('%Y%m%d_%H%M%S_%f')}",
-            "timestamp": datetime.utcnow().isoformat(),
+            "interaction_id": f"INT_{now.strftime('%Y%m%d_%H%M%S_%f')}",
+            "timestamp": now.isoformat(),
             "user_id": user_id,
             "thread_id": thread_id,
             "user_message": user_message,

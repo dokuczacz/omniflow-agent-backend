@@ -29,8 +29,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     
     # Extract parameters from query or body
     thread_id = req.params.get('thread_id')
-    limit = int(req.params.get('limit', 50))
-    offset = int(req.params.get('offset', 0))
+    
+    try:
+        limit = int(req.params.get('limit', 50))
+        offset = int(req.params.get('offset', 0))
+    except ValueError:
+        return func.HttpResponse(
+            json.dumps({"error": "Invalid limit or offset value"}),
+            status_code=400,
+            mimetype="application/json"
+        )
     
     # Try to get from body if not in query params
     try:
@@ -38,11 +46,26 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         if not thread_id:
             thread_id = req_body.get('thread_id')
         if req.params.get('limit') is None:
-            limit = req_body.get('limit', 50)
+            limit = int(req_body.get('limit', 50))
         if req.params.get('offset') is None:
-            offset = req_body.get('offset', 0)
+            offset = int(req_body.get('offset', 0))
     except (ValueError, AttributeError):
         pass
+    
+    # Validate parameters
+    if limit < 1 or limit > 1000:
+        return func.HttpResponse(
+            json.dumps({"error": "Limit must be between 1 and 1000"}),
+            status_code=400,
+            mimetype="application/json"
+        )
+    
+    if offset < 0:
+        return func.HttpResponse(
+            json.dumps({"error": "Offset must be non-negative"}),
+            status_code=400,
+            mimetype="application/json"
+        )
     
     # Extract user ID from request
     user_id = extract_user_id(req)

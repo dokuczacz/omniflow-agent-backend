@@ -64,7 +64,7 @@ ACTION_MAP = {
     }
 }
 
-# Walidacja parametrów: wymagane klucze dla każdej akcji
+# Parameter validation: required keys for each action
 ACTION_SCHEMA = {
     "read_blob_file": ["file_name"],
     "get_filtered_data": ["target_blob_name"],
@@ -74,7 +74,7 @@ ACTION_SCHEMA = {
     "add_new_data": ["target_blob_name", "new_entry"],
     "manage_files": ["operation"],
     "save_interaction": ["user_message", "assistant_response"],
-    # Pozostałe nie wymagają parametrów
+    # Other actions don't require parameters
 }
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
