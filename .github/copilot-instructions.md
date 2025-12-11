@@ -14,7 +14,7 @@ This is the **OmniFlow Agent Backend** - a production-ready Azure Functions back
 ## Technology Stack
 
 - **Runtime**: Python 3.12+
-- **Framework**: Azure Functions (Python v2 programming model)
+- **Framework**: Azure Functions v2 programming model (Python)
 - **Storage**: Azure Blob Storage
 - **Dependencies**:
   - `azure-functions` - Azure Functions framework
@@ -335,7 +335,7 @@ The `tool_call_handler` function logs all assistant interactions to `users/{user
 
 ## Notes for Copilot Agent
 
-- This repository uses Azure Functions v2 Python programming model
+- This repository uses Azure Functions v2 programming model (Python)
 - All functions must maintain user isolation via the shared utilities
 - The singleton pattern in `azure_client.py` is critical for performance
 - User IDs are extracted automatically; never require manual specification in function logic
