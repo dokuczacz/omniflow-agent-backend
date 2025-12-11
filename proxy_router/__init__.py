@@ -51,6 +51,16 @@ ACTION_MAP = {
         "method": "GET",
         "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/read_blob_file",
         "code": os.getenv("FUNCTION_CODE_READ_BLOB", "")
+    },
+    "save_interaction": {
+        "method": "POST",
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/save_interaction",
+        "code": os.getenv("FUNCTION_CODE_SAVE_INTERACTION", "")
+    },
+    "get_interaction_history": {
+        "method": "GET",
+        "url": os.getenv("FUNCTION_URL_BASE", "https://agentbackendservice.azurewebsites.net") + "/api/get_interaction_history",
+        "code": os.getenv("FUNCTION_CODE_GET_HISTORY", "")
     }
 }
 
@@ -63,6 +73,7 @@ ACTION_SCHEMA = {
     "upload_data_or_file": ["target_blob_name", "file_content"],
     "add_new_data": ["target_blob_name", "new_entry"],
     "manage_files": ["operation"],
+    "save_interaction": ["user_message", "assistant_response"],
     # Pozostałe nie wymagają parametrów
 }
 
